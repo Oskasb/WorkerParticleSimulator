@@ -49,14 +49,17 @@ define([
 			this.col = meshData.getAttributeBuffer(MeshData.COLOR);
 			this.data = meshData.getAttributeBuffer('DATA');
 			this.pos = meshData.getAttributeBuffer(MeshData.POSITION);
+
 			this.lastAlive = 0;
+
 			this.indexLengths = [this.lastAlive];
 			this.indexCount = this.lastAlive;
+			this.indexTransfer = [this.lastAlive]
 		};
 
 		ParticlesRenderer.prototype.renderMeshData = function() {
-			this.indexLengths = [this.lastAlive];
-			this.indexCount = this.lastAlive;
+			this.indexLengths = [this.indexTransfer[0]];
+			this.indexCount = this.indexTransfer[0];
 			this.meshData.setVertexDataUpdated();
 		};
 

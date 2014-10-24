@@ -1,12 +1,16 @@
 "use strict";
 
 define([
+	'particle_simulator/worker/ParticleSimulation',
+	'particle_simulator/worker/Particle',
 	'goo/renderer/Material',
 	'goo/math/MathUtils',
 	'goo/renderer/MeshData',
 	'goo/renderer/Shader',
 	'goo/math/Vector3'
 ],function(
+	ParticleSimulation,
+	Particle,
 	Material,
 	MathUtils,
 	MeshData,
@@ -15,25 +19,9 @@ define([
 	) {
 
 
-	var Particle = function() {
-		this.frameCount = 0;
-		this.position = new Vector3();
-		this.velocity = new Vector3();
-		this.progress = 0;
-		this.frameOffset = 0;
-		this.stretch = 1;
-		this.alpha = 1;
-		this.gravity = 0;
-		this.lifeSpan = 0;
-		this.lifeSpanTotal = 0;
-		this.dead = true;
-	};
-
-	var alphaCurve = [[0, 0], [0.5,1], [1, 0]];
-	// var sizeCurve = [[0, 1], [0.5,1], [1, 1]];
-
-
 	var ParticleSimulator = function(id, particleSettings) {
+		 this.id = id;
+		this.simulations = [];
 
 		this.particleSettings = particleSettings;
 		particleSettings.poolCount = particleSettings.poolCount !== undefined ? particleSettings.poolCount : 500;
@@ -57,7 +45,7 @@ define([
 
 		this.particles = [];
 		for (var i = 0; i < particleSettings.poolCount; i++) {
-			this.particles[i] = new Particle();
+			this.particles[i] = new Particle(new Vector3(), new Vector3());
 		}
 
 		this.aliveParticles = 0;
@@ -68,113 +56,11 @@ define([
 	}
 	var calcVec = new Vector3();
 
-	ParticleSimulator.prototype.spawnSimulation = function(particleRenderer, position, normal, effectData) {
+	ParticleSimulator.prototype.spawnSimulation = function(position, normal, effectData) {
 
-	//	var col = particleRenderer.meshData.getAttributeBuffer(MeshData.COLOR);
-	//	var data = particleRenderer.meshData.getAttributeBuffer('DATA');
+		var simulation = new ParticleSimulation(new Vector3(position), new Vector3(normal), this.particleSettings, effectData);
+		this.simulations.push(simulation);
 
-
-	//	var stretch = this.particleSettings.stretch;
-		var color = this.particleSettings.color;
-		var count = this.particleSettings.count;
-		var size = [this.particleSettings.size[0],this.particleSettings.size[1]];
-		var growth = [this.particleSettings.growth[0],this.particleSettings.growth[1]];
-		var strength = this.particleSettings.strength;
-		var gravity = this.particleSettings.gravity;
-		var spread = this.particleSettings.spread;
-		var lifeSpan = this.particleSettings.lifespan;
-
-		var alphaCurve = this.particleSettings.alphaCurve;
-
-		if (effectData) {
-
-			if (effectData.alphaCurve) {
-				alphaCurve = effectData.alphaCurve
-			}
-
-			if (effectData.lifespan) {
-				lifeSpan[0] = effectData.lifespan*0.8;
-				lifeSpan[1] = effectData.lifespan;
-			}
-			if (effectData.intensity) {
-				count = Math.ceil(count*effectData.intensity);
-			}
-			if (effectData.count) {
-				count = effectData.count;
-			}
-			if (effectData.color) {
-				color = effectData.color;
-			}
-			if (effectData.strength) {
-				strength = effectData.strength;
-			}
-
-			if (effectData.size) {
-				size[0] = effectData.size;
-				size[1] = effectData.size;
-			}
-			if (effectData.growth) {
-				growth[0] = effectData.growth;
-				growth[1] = effectData.growth;
-			}
-			if (effectData.gravity) {
-				gravity = effectData.gravity;
-			}
-			if (effectData.scale) {
-				size[0] = size[0] * effectData.scale;
-				size[1] = size[1] * effectData.scale;
-				growth[0] = growth[0] * effectData.scale;
-				growth[1] = growth[1] * effectData.scale;
-				strength *= effectData.scale;
-			}
-			if (effectData.spread) {
-				spread = effectData.spread;
-			}
-		}
-
-
-		var rotation = this.particleSettings.rotation;
-		var spin = this.particleSettings.spin;
-
-		var effectCount = count;
-		for (var i = 0, l = this.particles.length; i < l && count > 0; i++) {
-			var particle = this.particles[i];
-
-			if (particle.dead) {
-				particle.frameCount = 0;
-				var ratio = particle.stretch * (this.particleSettings.count-count) /  this.particleSettings.count;
-
-				particle.position.x = position.x + normal.x*ratio;
-				particle.position.y = position.y + normal.y*ratio;
-				particle.position.z = position.z + normal.z*ratio;
-				particle.alphaCurve = alphaCurve;
-
-				particle.lifeSpanTotal = particle.lifeSpan = randomBetween(lifeSpan[0], lifeSpan[1]);
-
-				particle.frameOffset = count/effectCount;
-
-				particle.velocity.set(
-					strength*((Math.random() -0.5) * (2*spread) + (1-spread)*normal.x),
-					strength*((Math.random() -0.5) * (2*spread) + (1-spread)*normal.y),
-					strength*((Math.random() -0.5) * (2*spread) + (1-spread)*normal.z)
-				);
-
-				particle.dead = false;
-				this.aliveParticles++;
-				particle.gravity = gravity;
-				count--;
-
-				particleRenderer.col[4 * i + 0] = color[0];
-				particleRenderer.col[4 * i + 1] = color[1];
-				particleRenderer.col[4 * i + 2] = color[2];
-
-				particle.alpha = color[3];
-				particleRenderer.data[4 * i + 0] = randomBetween(size[0], size[1]); // size
-				particleRenderer.data[4 * i + 1] = randomBetween(growth[0], growth[1]); // size change
-				particleRenderer.data[4 * i + 2] = randomBetween(rotation[0], rotation[1]) * MathUtils.DEG_TO_RAD; // rot
-				particleRenderer.data[4 * i + 3] = randomBetween(spin[0], spin[1]) * MathUtils.DEG_TO_RAD; // spin
-			}
-		}
 	};
 
 
@@ -190,12 +76,59 @@ define([
 		return 0;
 	};
 
-	ParticleSimulator.prototype.updateSimulator = function(particleRenderer, tpf) {
+	ParticleSimulator.prototype.includeSimulation = function(sim, colorData, uvData) {
+		var count = sim.count;
 
-		var pos = particleRenderer.meshData.getAttributeBuffer(MeshData.POSITION);
-		var col = particleRenderer.meshData.getAttributeBuffer(MeshData.COLOR);
-		var data = particleRenderer.meshData.getAttributeBuffer('DATA');
-		var lastAlive = 0;
+		for (var i = 0, l = this.particles.length; i < l && count > 0; i++) {
+			var particle = this.particles[i];
+
+			if (particle.dead) {
+
+				var ratio = 1 - particle.stretch * (sim.count-count) /  sim.count;
+
+				particle.position.x = sim.position.x + sim.normal.x*ratio;
+				particle.position.y = sim.position.y + sim.normal.y*ratio;
+				particle.position.z = sim.position.z + sim.normal.z*ratio;
+				particle.alphaCurve = sim.alphaCurve;
+
+				particle.lifeSpanTotal = particle.lifeSpan = randomBetween(sim.lifeSpan[0], sim.lifeSpan[1]);
+
+				particle.frameOffset = count/sim.effectCount;
+
+				particle.velocity.set(
+					sim.strength*((Math.random() -0.5) * (2*sim.spread) + (1-sim.spread)*sim.normal.x),
+					sim.strength*((Math.random() -0.5) * (2*sim.spread) + (1-sim.spread)*sim.normal.y),
+					sim.strength*((Math.random() -0.5) * (2*sim.spread) + (1-sim.spread)*sim.normal.z)
+				);
+
+				particle.dead = false;
+				this.aliveParticles++;
+				particle.gravity = sim.gravity;
+				count--;
+
+				colorData[4 * i + 0] = sim.color[0];
+				colorData[4 * i + 1] = sim.color[1];
+				colorData[4 * i + 2] = sim.color[2];
+
+				particle.alpha = sim.color[3];
+				uvData[4 * i + 0] = randomBetween(sim.size[0], sim.size[1]); // size
+				uvData[4 * i + 1] = randomBetween(sim.growth[0], sim.growth[1]); // size change
+				uvData[4 * i + 2] = randomBetween(sim.rotation[0], sim.rotation[1]) * MathUtils.DEG_TO_RAD; // rot
+				uvData[4 * i + 3] = randomBetween(sim.spin[0], sim.spin[1]) * MathUtils.DEG_TO_RAD; // spin
+			}
+		}
+	};
+
+	ParticleSimulator.prototype.updateNewSimulations = function(colData, uvData) {
+		while (this.simulations.length != 0) {
+			this.includeSimulation(this.simulations.pop(), colData, uvData);
+		}
+	};
+
+	ParticleSimulator.prototype.updateSimulator = function(posData, colData, uvData, indexTransfer, tpf) {
+
+		this.updateNewSimulations(colData, uvData);
+
 		var gravity = this.particleSettings.gravity;
 		var acceleration = this.particleSettings.acceleration;
 		for (var i = 0, l = this.particles.length; i < l; i++) {
@@ -212,37 +145,31 @@ define([
 
 			particle.lifeSpan -= deduct;
 
-
-
 			if (particle.lifeSpan <= 0) {
 				particle.dead = true;
 				particle.position.setd(0, 0, 0);
-				pos[3 * i + 0] = 0;
-				pos[3 * i + 1] = -1000;
-				pos[3 * i + 2] = 0;
+				posData[3 * i + 0] = 0;
+				posData[3 * i + 1] = -1000;
+				posData[3 * i + 2] = 0;
 				this.aliveParticles--;
 				continue;
 			}
 			particle.progress = 1-((particle.lifeSpan - particle.frameOffset*0.016)  / particle.lifeSpanTotal);
-			//	particle.frameOffset;
-
-
 
 			calcVec.setv(particle.velocity).muld(deduct, deduct, deduct);
 			particle.position.addv(calcVec);
 			particle.velocity.muld(acceleration, acceleration, acceleration);
 			particle.velocity.add_d(0, gravity * deduct, 0);
 
-			particleRenderer.pos[3 * i + 0] = particle.position.data[0];
-			particleRenderer.pos[3 * i + 1] = particle.position.data[1];
-			particleRenderer.pos[3 * i + 2] = particle.position.data[2];
+			posData[3 * i + 0] = particle.position.data[0];
+			posData[3 * i + 1] = particle.position.data[1];
+			posData[3 * i + 2] = particle.position.data[2];
 
-			particleRenderer.col[4 * i + 3] = particle.alpha * this.fitValueInCurve(particle.progress, particle.alphaCurve);
+			colData[4 * i + 3] = particle.alpha * this.fitValueInCurve(particle.progress, particle.alphaCurve);
 
-			particleRenderer.data[4 * i + 0] += particleRenderer.data[4 * i + 1] * particle.progress;
-			particleRenderer.data[4 * i + 2] += particleRenderer.data[4 * i + 3] * particle.progress;
-			particle.frameCount += 1;
-			particleRenderer.lastAlive = i;
+			uvData[4 * i + 0] += uvData[4 * i + 1] * particle.progress;
+			uvData[4 * i + 2] += uvData[4 * i + 3] * particle.progress;
+			indexTransfer[0] = i;
 
 		}
 

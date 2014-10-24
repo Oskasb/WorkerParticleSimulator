@@ -8,20 +8,13 @@ define(function() {
 		this.dataProtocol = dataProtocol;
 	};
 
-	ParticleProtocol.prototype.setProtocol = function(protocol) {
+	ParticleProtocol.prototype.fromSequence = function(dataSequence) {
 
 	};
 
-	ParticleProtocol.prototype.meshDataFromProtocol = function(arrayData, protocol) {
+	ParticleProtocol.prototype.rendererToSequence = function(particleRenderer) {
 
 	};
-
-	ParticleProtocol.prototype.spawnToBuffer = function(arrayData, protocol) {
-
-	};
-
-
-
 
 	return ParticleProtocol
-})
+});

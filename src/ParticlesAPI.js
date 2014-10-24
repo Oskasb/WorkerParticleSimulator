@@ -29,14 +29,17 @@ define([
 
 	ParticlesAPI.prototype.spawnParticles = function(id, position, normal, effectData) {
 		//	this.particlesWorker.spawnParticles(id, this.renderers[id], position, normal, effectData);
-		this.simulators[id].spawnSimulation(this.renderers[id], position, normal, effectData);
+		this.simulators[id].spawnSimulation(position, normal, effectData);
 
 	};
 
 	ParticlesAPI.prototype.updateSimulator = function(id, tpf) {
 	//	this.particlesWorker.requestSimulationFrame(id, this.renderers[id], tpf);
-		if (this.simulators[id].aliveParticles > 0) {
-			this.simulators[id].updateSimulator(this.renderers[id], tpf);
+
+
+
+		if (this.simulators[id].aliveParticles > 0 || this.simulators[id].simulations.length) {
+			this.simulators[id].updateSimulator(this.renderers[id].pos, this.renderers[id].col, this.renderers[id].data, this.renderers[id].indexTransfer, tpf);
 		}
 	};
 
