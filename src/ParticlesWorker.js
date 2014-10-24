@@ -18,12 +18,18 @@ define(['particle_simulator/protocol/ParticleProtocol'],
 			this.worker = new Worker('./js/submodules/particle_simulator/src/worker/ParticleWorkerMain.js');
 
 			this.worker.onmessage = function(msg) {
+
+				if (msg.data[0] == 'ready') {
+					this.particlesAPI.setEnabled(true);
+					return;
+				}
 				this.receiveParticleData(msg);
 			}.bind(this);
 		};
 
-		ParticlesWorker.prototype.receiveParticleData = function(msg) {
 
+
+		ParticlesWorker.prototype.receiveParticleData = function(msg) {
 			var entry = this.particleProtocol.updateData(msg.data);
 			this.particlesAPI.systemIdUpdated(entry.id, entry);
 		//	console.log("ParticleData updated:", msg);

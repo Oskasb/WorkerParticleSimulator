@@ -12,14 +12,25 @@ define([
 
 	var ParticlesAPI = function() {
 		this.particlesWorker = new ParticlesWorker(this);
+		this.enabled = false;
 		this.simulators = {};
 		this.renderers = {};
 		this.toUpdate = [];
+		this.processingId = null;
+		this.underruns = 0;
+	};
+
+	ParticlesAPI.prototype.setEnabled = function(enabled) {
+		this.enabled = enabled;
 	};
 
 	ParticlesAPI.prototype.systemIdUpdated = function(id, responseData) {
-		this.renderers[id].renderMeshData(responseData);
+		if (this.processingId != id) {
+			console.error("Unexpected particle id processed.", this.processingId, id)
+		}
 
+		this.renderers[id].renderMeshData(responseData);
+		this.processingId = null;
 		if (this.toUpdate.length) {
 			this.requestWorkerProcess(this.toUpdate.pop(), this.frameTpf);
 		}
@@ -27,7 +38,10 @@ define([
 	};
 
 	ParticlesAPI.prototype.requestFrameUpdate = function(tpf) {
+		if (!this.enabled) return;
+		this.underruns = 0;
 		this.frameTpf = tpf;
+		this.toUpdate.length = 0;
 		for (var key in this.renderers) {
 			this.toUpdate.push(key);
 		}
@@ -60,6 +74,11 @@ define([
 
 
 	ParticlesAPI.prototype.requestWorkerProcess = function(id, tpf) {
+		if (this.processingId) {
+			this.underruns++;
+			return;
+		}
+		this.processingId = id;
 		this.particlesWorker.requestSimulationFrame(id, this.renderers[id].pos, this.renderers[id].col, this.renderers[id].data, this.renderers[id].indexTransfer, tpf);
 	};
 

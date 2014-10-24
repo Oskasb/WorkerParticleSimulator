@@ -40,12 +40,10 @@ require(
 
 		ParticleWorkerMain.prototype.initSimulationFrame = function(data) {
 		//	console.log("Worker get data", data);
-			this.currentSimulatorId = data.id;
-			var entry = this.particleProtocol.updateData(data);
 
-			this.simulators[entry.id].updateSimulator(entry.posData, entry.colData, entry.uvData, entry.indexTransfer, entry.tpf);
+			this.simulators[data.id].updateSimulator(data.posData, data.colData, data.uvData, data.indexTransfer, data.tpf);
 
-			var frame =  this.particleProtocol.updateData(entry);
+			var frame = this.particleProtocol.updateData(data);
 			postMessage(frame, [frame.posData.buffer, frame.colData.buffer, frame.uvData.buffer]);
 
 		};
@@ -55,6 +53,7 @@ require(
 		};
 
 		MainWorker = new ParticleWorkerMain();
+		postMessage(['ready']);
 	}
 );
 
@@ -62,9 +61,15 @@ var handleMessage = function(oEvent) {
 
 	if (!MainWorker) {
 		console.log("ParticleMainWorker not yet ready: ", oEvent);
-		setTimeout(function() {
-			handleMessage(oEvent);
-		}, 250);
+		if (oEvent.data[0] ==  'createSimulator') {
+			setTimeout(function() {
+				handleMessage(oEvent);
+			}, 250);
+		} else {
+			console.log("Not ready..! ", oEvent.data);
+			postMessage(['clear', oEvent.data[0]])
+		}
+
 		return;
 	}
 

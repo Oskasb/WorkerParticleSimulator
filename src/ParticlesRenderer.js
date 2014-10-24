@@ -58,6 +58,7 @@ define([
 		};
 
 		ParticlesRenderer.prototype.renderMeshData = function(responseData) {
+			if (!responseData.indexTransfer[0]) return;
 			this.meshData.dataViews.COLOR.set(responseData.colData);
 			this.meshData.dataViews.DATA.set(responseData.uvData);
 			this.meshData.dataViews.POSITION.set(responseData.posData);
@@ -71,25 +72,11 @@ define([
 				console.log("No length on Col!", this.id)
 				return;
 			}
-			if (this.id == "splash_water") {
-			//
-			//
-			//	console.log(responseData.indexTransfer[0],
-			//		this.meshData.vertexData.data[3],
-			//		this.meshData.getAttributeBuffer(MeshData.POSITION)[3],
-			//		this.meshData.getAttributeBuffer('DATA')[3],
-			//		this.meshData.getAttributeBuffer(MeshData.COLOR)[3],
-			//		responseData.posData[3]
-			//
-			//	)
 
-			}
-			this.indexLengths = [responseData.indexTransfer[0]];
-			this.indexCount =   responseData.indexTransfer[0];
 			this.meshData.indexLengths =    [responseData.indexTransfer[0]];
 			this.meshData.indexCount =      responseData.indexTransfer[0];
 			this.meshData.setVertexDataUpdated();
-			this.meshData.setVertexDataUpdated();
+
 		};
 
 
