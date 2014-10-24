@@ -14,7 +14,7 @@ define([
 		) {
 
 		ParticlesRenderer = function(goo, id, particleSettings, texture) {
-
+			this.id = id;
 			var attributeMap = MeshData.defaultMap([MeshData.POSITION, MeshData.COLOR]);
 			attributeMap.DATA = MeshData.createAttribute(4, 'Float');
 			var meshData = new MeshData(attributeMap, particleSettings.poolCount);
@@ -57,11 +57,41 @@ define([
 			this.indexTransfer = [this.lastAlive]
 		};
 
-		ParticlesRenderer.prototype.renderMeshData = function() {
-			this.indexLengths = [this.indexTransfer[0]];
-			this.indexCount = this.indexTransfer[0];
+		ParticlesRenderer.prototype.renderMeshData = function(responseData) {
+			this.meshData.dataViews.COLOR.set(responseData.colData);
+			this.meshData.dataViews.DATA.set(responseData.uvData);
+			this.meshData.dataViews.POSITION.set(responseData.posData);
+
+
+			this.col = this.meshData.getAttributeBuffer(MeshData.COLOR)
+			this.data = this.meshData.getAttributeBuffer('DATA')
+			this.pos = this.meshData.getAttributeBuffer(MeshData.POSITION)
+
+			if (!this.meshData.dataViews.COLOR.length) {
+				console.log("No length on Col!", this.id)
+				return;
+			}
+			if (this.id == "splash_water") {
+			//
+			//
+			//	console.log(responseData.indexTransfer[0],
+			//		this.meshData.vertexData.data[3],
+			//		this.meshData.getAttributeBuffer(MeshData.POSITION)[3],
+			//		this.meshData.getAttributeBuffer('DATA')[3],
+			//		this.meshData.getAttributeBuffer(MeshData.COLOR)[3],
+			//		responseData.posData[3]
+			//
+			//	)
+
+			}
+			this.indexLengths = [responseData.indexTransfer[0]];
+			this.indexCount =   responseData.indexTransfer[0];
+			this.meshData.indexLengths =    [responseData.indexTransfer[0]];
+			this.meshData.indexCount =      responseData.indexTransfer[0];
+			this.meshData.setVertexDataUpdated();
 			this.meshData.setVertexDataUpdated();
 		};
+
 
 
 

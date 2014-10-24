@@ -8,15 +8,15 @@ importScripts(baseUrl+'js/lib/goo/goo.js');
 require.config({
 	baseUrl: baseUrl+'js/',
 	paths: {
-		particles:'submodules/particle_simulator/src'
+		particle_simulator:'submodules/particle_simulator/src'
 	}
 });
 
 
 require(
 	[
-		'particles/worker/ParticleSimulator',
-		'particles/protocol/ParticleProtocol'
+		'particle_simulator/worker/ParticleSimulator',
+		'particle_simulator/protocol/ParticleProtocol'
 	],
 	function(
 		ParticleSimulator,
@@ -24,27 +24,34 @@ require(
 		) {
 
 		var ParticleWorkerMain = function() {
+
 			this.particleProtocol = new ParticleProtocol();
+
+			this.simulators = {};
+			this.currentSimulatorId = null;
+
 		};
 
-		ParticleWorkerMain.prototype.createSimulator = function(msg) {
-			console.log("Worker create simulator", msg)
+		ParticleWorkerMain.prototype.createSimulator = function(data) {
+			console.log("Worker create simulator", data)
+			this.simulators[data.id] = new ParticleSimulator(data.id, data);
+
 		};
 
-		ParticleWorkerMain.prototype.dataPacketReceived = function(data) {
-			console.log("Worker get data", data)
+		ParticleWorkerMain.prototype.initSimulationFrame = function(data) {
+		//	console.log("Worker get data", data);
+			this.currentSimulatorId = data.id;
+			var entry = this.particleProtocol.updateData(data);
+
+			this.simulators[entry.id].updateSimulator(entry.posData, entry.colData, entry.uvData, entry.indexTransfer, entry.tpf);
+
+			var frame =  this.particleProtocol.updateData(entry);
+			postMessage(frame, [frame.posData.buffer, frame.colData.buffer, frame.uvData.buffer]);
+
 		};
 
-		ParticleWorkerMain.prototype.spawnSimulation = function(msg) {
-			console.log("Worker spawn simulator", msg)
-		};
-
-		ParticleWorkerMain.prototype.setSimulatorProtocol = function(msg) {
-			console.log("Worker set protocol", msg)
-		};
-
-		ParticleWorkerMain.prototype.fetchSimulationFrame = function(msg) {
-			console.log("Worker fetch frame", msg)
+		ParticleWorkerMain.prototype.spawnSimulation = function(data) {
+			this.simulators[data[1]].spawnSimulation(data[2], data[3], data[4]);
 		};
 
 		MainWorker = new ParticleWorkerMain();
@@ -61,27 +68,17 @@ var handleMessage = function(oEvent) {
 		return;
 	}
 
-	if (oEvent.data[0].byteLength == 0) {
-		MainWorker.dataPacketReceived(oEvent.data);
+	if (oEvent.data.tpf) {
+		MainWorker.initSimulationFrame(oEvent.data);
 	}
 
 	if (oEvent.data[0] == 'spawnSimulation') {
-		MainWorker.spawnSimulation(oEvent.data[1]);
-		return;
-	}
-
-	if (oEvent.data[0] == 'fetchSimulationFrame') {
-		MainWorker.fetchSimulationFrame(oEvent.data[1]);
+		MainWorker.spawnSimulation(oEvent.data);
 		return;
 	}
 
 	if (oEvent.data[0] == 'createSimulator') {
 		MainWorker.createSimulator(oEvent.data[1]);
-		return;
-	}
-
-	if (oEvent.data[0] == 'setSimulatorProtocol') {
-		MainWorker.setSimulatorProtocol(oEvent.data[1]);
 		return;
 	}
 

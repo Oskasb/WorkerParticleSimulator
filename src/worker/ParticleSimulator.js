@@ -58,7 +58,7 @@ define([
 
 	ParticleSimulator.prototype.spawnSimulation = function(position, normal, effectData) {
 
-		var simulation = new ParticleSimulation(new Vector3(position), new Vector3(normal), this.particleSettings, effectData);
+		var simulation = new ParticleSimulation(new Vector3(position.data[0], position.data[1],position.data[2]), new Vector3(normal.data[0], normal.data[1], normal.data[2]), this.particleSettings, effectData);
 		this.simulations.push(simulation);
 
 	};

@@ -3,9 +3,15 @@
 define(['particle_simulator/protocol/ParticleProtocol'],
 	function(ParticleProtocol) {
 
-		var ParticlesWorker = function() {
+		var ParticlesWorker = function(particlesAPI) {
+			this.particlesAPI = particlesAPI;
 			this.particleProtocol = new ParticleProtocol();
 		   	this.setupWorker();
+
+			this.creatingId = null;
+
+			this.updatingId = null;
+			this.indexTransfer = null;
 		};
 
 		ParticlesWorker.prototype.setupWorker = function() {
@@ -17,20 +23,34 @@ define(['particle_simulator/protocol/ParticleProtocol'],
 		};
 
 		ParticlesWorker.prototype.receiveParticleData = function(msg) {
-			console.log("ParticleData updated:", msg);
+
+			var entry = this.particleProtocol.updateData(msg.data);
+			this.particlesAPI.systemIdUpdated(entry.id, entry);
+		//	console.log("ParticleData updated:", msg);
 		};
 
 
-		ParticlesWorker.prototype.spawnParticles = function(id, meshData, position, normal, effectData) {
-			this.worker.postMessage(['spawnSimulation', id])
+		ParticlesWorker.prototype.spawnParticles = function(id, position, normal, effectData) {
+			this.worker.postMessage(['spawnSimulation', id, position, normal, effectData])
 		};
 
-		ParticlesWorker.prototype.requestSimulationFrame = function(id, meshData, tpf) {
-			this.worker.postMessage(['fetchSimulationFrame', id])
+		ParticlesWorker.prototype.requestSimulationFrame = function(id, posData, colData, uvData, indexTransfer, tpf) {
+			var frame = {
+				posData:new Float32Array(posData),
+				colData:new Float32Array(colData),
+				uvData:new Float32Array(uvData),
+				id:id,
+				indexTransfer:indexTransfer,
+				tpf:tpf
+			};
+
+			this.worker.postMessage(frame, [frame.posData.buffer, frame.colData.buffer, frame.uvData.buffer]);
+
+
 		};
 
-		ParticlesWorker.prototype.createWorkerSimulator = function(id, meshData, particleSettings) {
-			this.worker.postMessage(['createSimulator', id])
+		ParticlesWorker.prototype.createWorkerSimulator = function(id, particleSettings) {
+			this.worker.postMessage(['createSimulator', particleSettings])
 		};
 
 		return ParticlesWorker
