@@ -58,6 +58,9 @@ define([
 		};
 
 		ParticlesRenderer.prototype.renderMeshData = function(responseData) {
+			if (!responseData) {
+
+
 			if (!responseData.indexTransfer[0]) return;
 			this.meshData.dataViews.COLOR.set(responseData.colData);
 			this.meshData.dataViews.DATA.set(responseData.uvData);
@@ -75,6 +78,7 @@ define([
 
 			this.meshData.indexLengths =    [responseData.indexTransfer[0]];
 			this.meshData.indexCount =      responseData.indexTransfer[0];
+		}
 			this.meshData.setVertexDataUpdated();
 
 		};

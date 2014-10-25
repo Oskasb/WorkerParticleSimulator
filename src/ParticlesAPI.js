@@ -42,6 +42,7 @@ define([
 		this.underruns = 0;
 		this.frameTpf = tpf;
 		this.toUpdate.length = 0;
+
 		for (var key in this.renderers) {
 			this.toUpdate.push(key);
 		}
@@ -56,13 +57,13 @@ define([
 
 		var delayedUpdate = function(id, delay) {
 			this.updateMainThreadSimulator(id, tpf);
-			setTimeout(function() {
+		//	setTimeout(function() {
 				updateId(id);
-			}, delay)
+		// 	}, delay)
 		}.bind(this);
 
 
-	// 	delayedUpdate(this.toUpdate.pop(), Math.random()*0.1)
+		//	delayedUpdate(this.toUpdate.pop(), Math.random()*0.1)
 
 	};
 
@@ -91,10 +92,11 @@ define([
 
 
 	ParticlesAPI.prototype.createParticleSystem = function(goo, id, particleSettings, texture) {
-		this.renderers[id] = new ParticlesRenderer(goo, id, particleSettings, texture);
-		this.createWorkerParticleSimulator(id, particleSettings);
-		return this.renderers[id]
-	//	this.createMainThreadParticleSimulator(id, particleSettings)
+			this.renderers[id] = new ParticlesRenderer(goo, id, particleSettings, texture);
+			this.createWorkerParticleSimulator(id, particleSettings);
+
+		//	this.createMainThreadParticleSimulator(id, particleSettings)
+		return this.renderers[id];
 	};
 
 	ParticlesAPI.prototype.createWorkerParticleSimulator = function(id, particleSettings) {
