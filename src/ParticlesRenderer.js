@@ -58,27 +58,26 @@ define([
 		};
 
 		ParticlesRenderer.prototype.renderMeshData = function(responseData) {
-			if (!responseData) {
+			// Response from worker, not used in main thread mode
+			if (responseData) {
+				if (!responseData.indexTransfer[0]) return;
+				this.meshData.dataViews.COLOR.set(responseData.colData);
+				this.meshData.dataViews.DATA.set(responseData.uvData);
+				this.meshData.dataViews.POSITION.set(responseData.posData);
 
 
-			if (!responseData.indexTransfer[0]) return;
-			this.meshData.dataViews.COLOR.set(responseData.colData);
-			this.meshData.dataViews.DATA.set(responseData.uvData);
-			this.meshData.dataViews.POSITION.set(responseData.posData);
+				this.col = this.meshData.getAttributeBuffer(MeshData.COLOR)
+				this.data = this.meshData.getAttributeBuffer('DATA')
+				this.pos = this.meshData.getAttributeBuffer(MeshData.POSITION)
 
+				if (!this.meshData.dataViews.COLOR.length) {
+					console.log("No length on Col!", this.id)
+					return;
+				}
 
-			this.col = this.meshData.getAttributeBuffer(MeshData.COLOR)
-			this.data = this.meshData.getAttributeBuffer('DATA')
-			this.pos = this.meshData.getAttributeBuffer(MeshData.POSITION)
-
-			if (!this.meshData.dataViews.COLOR.length) {
-				console.log("No length on Col!", this.id)
-				return;
+				this.meshData.indexLengths =    [responseData.indexTransfer[0]];
+				this.meshData.indexCount =      responseData.indexTransfer[0];
 			}
-
-			this.meshData.indexLengths =    [responseData.indexTransfer[0]];
-			this.meshData.indexCount =      responseData.indexTransfer[0];
-		}
 			this.meshData.setVertexDataUpdated();
 
 		};
