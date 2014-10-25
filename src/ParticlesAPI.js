@@ -84,11 +84,15 @@ define([
 	};
 
 	ParticlesAPI.prototype.createParticleSystem = function(goo, id, particleSettings, texture) {
+		this.toUpdate.length = 0;
 		this.renderers[id] = new ParticlesRenderer(goo, id, particleSettings, texture);
 
 		if (this.useWorker){
 			this.particlesWorker.createWorkerSimulator(id, particleSettings);
 		} else {
+			if (this.simulators[id]) {
+				delete this.simulators[id];
+			}
 			this.simulators[id] = new ParticleSimulator(id, particleSettings);
 		}
 
