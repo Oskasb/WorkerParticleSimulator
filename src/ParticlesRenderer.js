@@ -93,8 +93,10 @@ define([
 			},
 			uniforms: {
 				viewProjectionMatrix: Shader.VIEW_PROJECTION_MATRIX,
+				projectionMatrix: Shader.PROJECTION_MATRIX,
 				worldMatrix: Shader.WORLD_MATRIX,
 				particleMap: 'PARTICLE_MAP',
+				camFov: Shader.CAMERA_FOV,
 				resolution: Shader.RESOLUTION
 			},
 			vshader: [
@@ -102,15 +104,16 @@ define([
 				'attribute vec4 vertexColor;',
 				'attribute vec4 vertexData;',
 				'uniform mat4 viewProjectionMatrix;',
+				'uniform mat4 projectionMatrix;',
 				'uniform mat4 worldMatrix;',
 				'uniform vec2 resolution;',
-
+				'uniform float camFov;',
 				'varying vec4 color;',
 				'varying mat3 spinMatrix;',
 
 				'void main(void) {',
 				'gl_Position = viewProjectionMatrix * worldMatrix * vec4(vertexPosition.xyz, 1.0);',
-				'gl_PointSize = vertexData.x * resolution.y / 1000.0 / gl_Position.w;',
+				'gl_PointSize = vertexData.x * resolution.y / (camFov * 20.0) / gl_Position.w;',
 				'color = vertexColor;',
 				'float c = cos(vertexData.z); float s = sin(vertexData.z);',
 				'spinMatrix = mat3(c, s, 0.0, -s, c, 0.0, (s-c+1.0)*0.5, (-s-c+1.0)*0.5, 1.0);',
