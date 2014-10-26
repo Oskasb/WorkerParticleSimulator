@@ -11,6 +11,7 @@ define(function() {
 		this.stretch = 1;
 		this.alpha = 1;
 		this.gravity = 0;
+		this.growth = 0;
 		this.lifeSpan = 0;
 		this.lifeSpanTotal = 0;
 		this.dead = true;

@@ -2,12 +2,13 @@
 
 define(function() {
 	var alphaCurve = [[0, 0], [0.5,1], [1, 0]];
+	var growthCurve = [[0, 1], [1, 0]];
 
 	var ParticleSimulation = function(position, normal, particleSettings, effectData) {
 		this.position = position;
 		this.normal = normal;
 		this.rotation = particleSettings.rotation;
-		this.spin = particleSettings.spin;
+		this.spin = [particleSettings.spin[0],particleSettings.spin[1]];
 
 
 		this.stretch = particleSettings.stretch;
@@ -18,26 +19,35 @@ define(function() {
 		this.strength = particleSettings.strength;
 		this.gravity = particleSettings.gravity;
 		this.spread = particleSettings.spread;
-		this.lifeSpan = particleSettings.lifespan;
-
+		this.lifeSpan = [particleSettings.lifespan[0], particleSettings.lifespan[1]];
+		this.acceleration = particleSettings.acceleration;
+		this.gravity = particleSettings.gravity;
 		this.alphaCurve = particleSettings.alphaCurve || alphaCurve;
+		this.growthCurve = particleSettings.growthCurve || growthCurve;
 
 		if (effectData) {
-
+			if (effectData.acceleration) {
+				this.acceleration = effectData.acceleration
+			}
 			if (effectData.alphaCurve) {
 				this.alphaCurve = effectData.alphaCurve
 			}
-
+			if (effectData.growthCurve) {
+				this.growthCurve = effectData.growthCurve
+			}
 			if (effectData.lifespan) {
 				this.lifeSpan[0] = effectData.lifespan*0.8;
 				this.lifeSpan[1] = effectData.lifespan;
 			}
-			if (effectData.intensity) {
-				this.count = Math.ceil(count*effectData.intensity);
-			}
+
 			if (effectData.count) {
 				this.count = effectData.count;
 			}
+
+			if (effectData.intensity) {
+				this.count = Math.ceil(this.count*effectData.intensity);
+			}
+
 			if (effectData.color) {
 				this.color = effectData.color;
 			}

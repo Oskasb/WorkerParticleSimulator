@@ -89,7 +89,10 @@ define([
 				particle.position.x = sim.position.x + sim.normal.x*ratio;
 				particle.position.y = sim.position.y + sim.normal.y*ratio;
 				particle.position.z = sim.position.z + sim.normal.z*ratio;
+				particle.acceleration = sim.acceleration;
+				particle.gravity = sim.gravity;
 				particle.alphaCurve = sim.alphaCurve;
+				particle.growthCurve = sim.growthCurve;
 
 				particle.lifeSpanTotal = particle.lifeSpan = randomBetween(sim.lifeSpan[0], sim.lifeSpan[1]);
 
@@ -129,8 +132,6 @@ define([
 
 		this.updateNewSimulations(colData, uvData);
 
-		var gravity = this.particleSettings.gravity;
-		var acceleration = this.particleSettings.acceleration;
 		for (var i = 0, l = this.particles.length; i < l; i++) {
 			var particle = this.particles[i];
 
@@ -142,6 +143,8 @@ define([
 			if (!particle.frameCount) {
 				deduct = 0.016;
 			}
+
+
 
 			particle.lifeSpan -= deduct;
 
@@ -158,17 +161,17 @@ define([
 
 			calcVec.setv(particle.velocity).muld(deduct, deduct, deduct);
 			particle.position.addv(calcVec);
-			particle.velocity.muld(acceleration, acceleration, acceleration);
-			particle.velocity.add_d(0, gravity * deduct, 0);
+			particle.velocity.muld(particle.acceleration, particle.acceleration, particle.acceleration);
+			particle.velocity.add_d(0, particle.gravity * deduct, 0);
 
 			posData[3 * i + 0] = particle.position.data[0];
 			posData[3 * i + 1] = particle.position.data[1];
 			posData[3 * i + 2] = particle.position.data[2];
 
 			colData[4 * i + 3] = particle.alpha * this.fitValueInCurve(particle.progress, particle.alphaCurve);
-
-			uvData[4 * i + 0] += uvData[4 * i + 1] * particle.progress;
-			uvData[4 * i + 2] += uvData[4 * i + 3] * particle.progress;
+			particle.growth = this.fitValueInCurve(particle.progress, particle.growthCurve);
+			uvData[4 * i + 0] += uvData[4 * i + 1] * particle.growth;
+			uvData[4 * i + 2] += uvData[4 * i + 3] * particle.growth;
 			indexTransfer[0] = i;
 
 		}
