@@ -84,6 +84,10 @@ define([
 	};
 
 	ParticlesAPI.prototype.createParticleSystem = function(goo, id, particleSettings, texture) {
+		if (this.renderers[id]) {
+			this.renderers[id].entity.removeFromWorld();
+		}
+
 		this.toUpdate.length = 0;
 		this.renderers[id] = new ParticlesRenderer(goo, id, particleSettings, texture);
 
