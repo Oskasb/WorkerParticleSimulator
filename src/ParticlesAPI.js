@@ -1,109 +1,38 @@
 "use strict";
-
 define([
-	'particle_simulator/ParticlesWorker',
-	'particle_simulator/worker/ParticleSimulator',
-	'particle_simulator/ParticlesRenderer'
-],function(
-	ParticlesWorker,
-	ParticleSimulator,
-	ParticlesRenderer
-	) {
+	'particle_system/ParticleSystem'
+],
+	function (
+		ParticleSystem
+		) {
 
-	var ParticlesAPI = function(useWorker) {
-		this.useWorker = useWorker;
-		this.enabled = false;
+		var ParticlesAPI = function(goo) {
+			this.particleSystem = new ParticleSystem(goo);
+		};
 
-		if (this.useWorker){
-			this.particlesWorker = new ParticlesWorker(this);
-		}
+		ParticlesAPI.prototype.setEnabled = function(enabled) {
+			this.enabled = enabled;
+		};
 
-		this.simulators = {};
-		this.renderers = {};
-		this.toUpdate = [];
-		this.processingId = null;
-		this.underruns = 0;
-	};
+		ParticlesAPI.prototype.requestFrameUpdate = function(tpf) {
+			this.particleSystem.update(tpf);
+		};
 
-	ParticlesAPI.prototype.setEnabled = function(enabled) {
-		this.enabled = enabled;
-	};
+		ParticlesAPI.prototype.spawnParticles = function(id, position, normal, effectData, callbacks) {
+			this.particleSystem.spawnParticleSimulation(id, position, normal, effectData, callbacks)
+		};
 
-	ParticlesAPI.prototype.systemIdUpdated = function(id, responseData) {
-		if (this.processingId != id) {
-			console.error("Unexpected particle id processed.", this.processingId, id)
-		}
+		ParticlesAPI.prototype.wakeParticle = function(id, position, normal, effectData) {
+		//	this.particleSystem.wakeParticle(id)
+		};
 
-		this.renderers[id].renderMeshData(responseData);
-		this.processingId = null;
-		if (this.toUpdate.length) {
-			this.requestSimulationProcess(this.toUpdate.pop(), this.frameTpf);
-		}
-	};
+		ParticlesAPI.prototype.createParticleSystems = function(systemConfigs, rendererConfigs, atlasConfigs) {
+			this.particleSystem.addConfiguredSystems(systemConfigs, rendererConfigs,atlasConfigs)
+		};
 
-	ParticlesAPI.prototype.requestFrameUpdate = function(tpf) {
-		if (!this.enabled) return;
-		this.underruns = 0;
-		this.frameTpf = tpf;
-		this.toUpdate.length = 0;
+		ParticlesAPI.prototype.removeParticleSystem = function(id) {
+			this.particleSystem.remove(id)
+		};
 
-		for (var key in this.renderers) {
-			this.toUpdate.push(key);
-		}
-
-		var nextId = this.toUpdate.pop();
-
-		this.requestSimulationProcess(nextId, tpf);
-
-	};
-
-	ParticlesAPI.prototype.spawnParticles = function(id, position, normal, effectData) {
-		if (this.useWorker){
-			this.particlesWorker.spawnParticles(id, position, normal, effectData);
-		} else {
-			this.simulators[id].spawnSimulation(position, normal, effectData);
-		}
-	};
-
-
-	ParticlesAPI.prototype.requestSimulationProcess = function(id, tpf) {
-		if (this.processingId) {
-			this.underruns++;
-			return;
-		}
-		this.processingId = id;
-
-		if (this.useWorker){
-			this.particlesWorker.requestSimulationFrame(id, this.renderers[id].pos, this.renderers[id].col, this.renderers[id].data, this.renderers[id].indexTransfer, tpf);
-		} else {
-			if (this.simulators[id].aliveParticles > 0 || this.simulators[id].simulations.length) {
-				this.simulators[id].updateSimulator(this.renderers[id].pos, this.renderers[id].col, this.renderers[id].data, this.renderers[id].indexTransfer, tpf);
-			}
-			this.systemIdUpdated(id);
-		}
-	};
-
-	ParticlesAPI.prototype.createParticleSystem = function(goo, id, particleSettings, texture) {
-		if (this.renderers[id]) {
-			this.renderers[id].entity.removeFromWorld();
-		}
-
-		this.toUpdate.length = 0;
-		this.renderers[id] = new ParticlesRenderer(goo, id, particleSettings, texture);
-
-		if (this.useWorker){
-			this.particlesWorker.createWorkerSimulator(id, particleSettings);
-		} else {
-			if (this.simulators[id]) {
-				delete this.simulators[id];
-			}
-			this.simulators[id] = new ParticleSimulator(id, particleSettings);
-		}
-
-		return this.renderers[id];
-	};
-
-
-
-	return ParticlesAPI
-});
+		return ParticlesAPI
+	});

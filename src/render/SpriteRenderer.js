@@ -13,7 +13,7 @@ define([
 		Material
 		) {
 
-		ParticlesRenderer = function(goo, id, particleSettings, texture) {
+		SpriteRenderer = function(goo, id, particleSettings, texture) {
 			this.id = id;
 			var attributeMap = MeshData.defaultMap([MeshData.POSITION, MeshData.COLOR]);
 			attributeMap.DATA = MeshData.createAttribute(4, 'Float');
@@ -57,7 +57,7 @@ define([
 			this.indexTransfer = [this.lastAlive]
 		};
 
-		ParticlesRenderer.prototype.renderMeshData = function(responseData) {
+		SpriteRenderer.prototype.renderMeshData = function(responseData) {
 			// Response from worker, not used in main thread mode
 			if (responseData) {
 				if (!responseData.indexTransfer[0]) return;
@@ -135,5 +135,5 @@ define([
 			].join('\n')
 		};
 
-		return ParticlesRenderer;
+		return SpriteRenderer;
 	});
